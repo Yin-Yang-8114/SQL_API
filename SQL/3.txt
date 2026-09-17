@@ -1,0 +1,119 @@
+client:
+config-
+    import os
+    from pathlib import Path
+    from dotenv import load_dotenv
+
+    env_path = Path(__file__).resolve().parent / ".env"
+    load_dotenv(env_path)
+    SERVER_URL = os.environ["SERVER_URL"]
+target search:
+import questionary
+
+def choose_search_type(text_field="name"):
+    return questionary.select("Search by:",choices=[questionary.Choice("ID", value="id"),questionary.Choice(text_field, value=text_field), ],).unsafe_ask()
+
+def read_target_id():
+    valid = True
+    while valid:
+        value = questionary.text("Enter ID:").ask()
+        try:
+            number = int(value)
+            if number <= 0:
+                print("The number must be greater than zero")
+            else:
+                valid = False
+        except ValueError:
+            print("Enter a whole number")
+    return value
+
+def read_target_name():
+    valid = True
+    while valid:
+        value = questionary.text("Enter name:").ask()
+        if not value.strip():
+            print( "This field cannot be empty")
+        else:
+            valid = False
+    return value
+
+http client:
+import requests
+from config import SERVER_URL
+
+def request_last_location(endpoint, params=None):
+    url = SERVER_URL + endpoint
+    response = requests.get(url,
+        params=params,
+        timeout=10,)
+    response.raise_for_status()
+    return response.json()
+main:
+ריק אני צריך שתעשה אותו
+
+
+output:
+def show_last_location(result: dict):
+    print(f"Target ID: {result['target_id']}")
+    print(f"Target name: {result['target_name']}")
+    print(f"Last known location: {result['location_name']}")
+    print(f"Country: {result['country']}")
+    print(f"Description: {result['description']}")
+ serve:
+
+
+
+ db:
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+from peewee import MySQLDatabase
+
+env_path = Path(__file__).resolve().parent / ".env"
+load_dotenv(env_path)
+
+db = MySQLDatabase(
+    os.environ["DB_NAME"],
+    host=os.environ["DB_HOST"],
+    port=int(os.environ["DB_PORT"]),
+    user=os.environ["DB_USER"],
+    password=os.environ["DB_PASSWORD"],
+    charset="utf8",)
+
+ target servise:
+ from db import db
+
+def find_last_location(search_type, search_value):
+    if search_type == "id":
+        condition = "d.id = %s"
+    elif search_type == "name":
+        condition = "d.name = %s"
+    else:
+        raise ValueError("Search type must be id or name")
+    query = f"""
+        SELECT
+            d.id,
+            d.name,
+            s.name,
+            s.city
+        ORDER BY ASC
+        LIMIT 1;
+    """
+    with db.connection_context():
+        cursor = db.execute_sql(query, (search_value,))
+        row = cursor.fetchone()
+    if row is None:
+        return None
+    result = {
+        "target_id": row[0],
+        "target_name": row[1],
+        "location_name": row[2],
+        "country": row[3],
+        "description": row[4]}
+    return result
+שפה אני צריך עזרה לסיים אותו
+
+main :
+ריק גם שאני צריך שתעשה אותו
+
+
