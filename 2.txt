@@ -1,0 +1,299 @@
+מבחן סיום — מערכת תחקור
+Full Stack Investigation System
+מטרת הבחינה
+לצה״ל קיים בנק מטרות הכולל מידע על מטרות, רמת מסוכנות והמיקום האחרון הידוע שלהן. בנוסף קיימים אמצעי תקיפה כגון מטוסים, כטב״מים, תותחים וטילים. מטרת המערכת היא לאפשר תחקור והפקת מידע ממאגרי הנתונים האלה.
+בבחינה תבנו אפליקציה מלאה הכוללת לקוח, שרת ומסד נתונים טבלאי.
+Python Client
+    ↓ HTTP
+Python Server (FastAPI / Flask)
+    ↓
+Relational Database (MySQL / SQLite / PostgreSQL)
+
+במקומות שבהם נדרשת עבודה מול ה־Database ניתן לבחור בין ORM לבין Connector והרצת SQL, אלא אם נאמר אחרת.
+מה נבדק
+• קוד תקין ו־Flow מלא בין Client, Server ו־Database.
+• Clean Code — שמות ברורים, פונקציות קצרות ומבנה קריא.
+• SRP — אחריות ברורה לכל פונקציה וקובץ.
+• DRY — ללא שכפול לוגיקה מיותר.
+הסברים ודוגמאות מפורטים נמצאים בנספחי ה־PDF. בנספחים יש גם דוגמאות שימוש בספריות הרלוונטיות.
+נהלים
+• אין שימוש ב־AI בשום מצב.
+• אין חיפוש כללי בגוגל.
+• מותר להשתמש בתיעוד רשמי של חבילות ובאתרים לימודיים כגון W3Schools.
+• יש לבטל AI בעורך הקוד.
+• אין לפתוח דוגמאות קוד מפרויקטים או תרגילים קודמים.
+אי הקפדה על הנהלים עלולה להוביל לפסילת הבחינה.
+
+
+
+
+
+Feature 1 — Last Known Location
+השאלה שעל המערכת לענות עליה:
+מה שם המקום האחרון שבו נצפתה מטרה מסוימת? ניתן לחפש לפי id או לפי name של המטרה.
+Database — מבנה הטבלאות הקיימות:
+
+Location table:
+Field	Meaning
+id	Primary Key
+name	Location name (str)
+lat	Latitude (float)
+long	Longitude (float)
+country	Country (str)
+description	Description (str)
+
+
+Targets table:
+Field	Meaning
+id	Primary Key
+name	Target name (str)
+organization	Organization (str)
+danger_level	1-10
+rank	Rank (str)
+last_known_location_id	FK → locations.id
+
+
+תקבלו נתוני דמה עבור שתי הטבלאות. יש להפעיל את ה־Database ולטעון את הנתונים לפני הרצת המערכת.
+עליכם לייבוא את הקבצים שמתאימים לסוג הDB שאתם עובדים איתו: CSV/SQL/DB.
+
+
+
+
+Client — מבנה מוכתב
+client/
+├── main.py
+├── target_search.py
+├── http_client.py
+├── output.py
+├── config.py
+└── .env
+
+בקובץ .env הגדירו SERVER_URL. הקובץ config.py אחראי לטעינת ההגדרה; אין לכתוב את כתובת השרת ישירות בפונקציות. ודאו שהכתובת והפורט שנרשמים בENV תואמים לכתובת האמיתית של השרת שאתם מרימים.
+
+target_search.py
+def choose_search_type() -> str:
+    ...
+
+def read_target_id() -> int:
+    ...
+
+def read_target_name() -> str:
+    ...
+
+• choose_search_type()
+מציגה Search by ID / Search by name ומחזירה "id" או "name", לפי בחירת המשתמש.
+
+• read_target_id()
+מבקשת ID עד שמתקבל מספר שלם חיובי ולא ריק.
+
+• read_target_name()
+מבקשת name עד שמתקבל string שאינו ריק.
+
+
+
+
+
+
+
+
+
+Http_client.py
+def request_last_location(search_type: str, search_value) -> dict:
+    ...
+
+
+הפונקציה שולחת בקשת GET ל־Endpoint הבא:
+GET /targets/last-location
+
+בחיפוש לפי ID נשלח query parameter בשם target_id. בחיפוש לפי name נשלח query parameter בשם name.
+
+output.py
+def show_last_location(result: dict) -> None:
+    ...
+
+הפונקציה מציגה את תוצאת השרת בצורה קריאה. אין להדפיס את התשובה ישירות.
+הפורמט:
+===== Results =====
+Target ID: <target_id>
+Target name: <target_name>
+Last known location: <location_name>
+Country: <country>
+Description: <description>
+!!!!! Done !!!!!
+
+main.py
+def main() -> None:
+    ...
+
+Main מנהלת את ה־Flow בלבד ולא מבצעת בעצמה את כל ה־Validation, ה־HTTP או ההצגה.
+main()
+  ↓
+choose_search_type()
+  ↓
+├── "id"   → read_target_id()
+└── "name" → read_target_name()
+  ↓
+request_last_location()
+  ↓
+show_last_location()
+
+
+Server — מבנה מוכתב
+server/
+├── main.py
+├── db.py
+├── target_service.py
+├── response_models.py
+└── .env
+
+אם Framework או דרך העבודה שבחרתם אינם דורשים response_models.py, ניתן להשאיר אותו ריק.
+
+db.py
+אחראי על יצירת וניהול החיבור ל־Database. ניתן להשתמש ב־ORM או Connector. פרטי החיבור (host, ip, username, password, db name) נשמרים ב־.env ולא ישירות ב־Endpoint. הגדירו בעצמכם את הפונקציות הנדרשות לשם טעינת המשתנים והשימוש בהם.
+target_service.py
+def find_last_location(search_type: str, search_value):
+    ...
+
+הפונקציה מחפשת את המטרה לפי id או name, מבצעת את שאילתת הSQL שמחזירה את פרטי המטרה ופרטי המיקום, ומחזירה את התשובה.
+main.py — Endpoint
+GET /targets/last-location
+
+ה־Endpoint מקבל target_id או name, קורא ל:
+find_last_location()
+ומחזיר JSON עם target_id, target_name, location_name, country ו־description.
+דוגמה בלבד למבנה Response אפשרי:
+{
+  "target_id": 17,
+  "target_name": "Example Target",
+  "location_name": "Example Location",
+  "country": "Example Country",
+  "description": "Example description"
+}
+
+הערכים בדוגמאות אינם קבועים. כל הנתונים בפועל חייבים להגיע מהקלט או מה־Database.
+
+Flow — Feature 1
+User
+ ↓
+Target ID / name
+ ↓
+Python Client
+ ↓ HTTP
+GET /targets/last-location
+ ↓
+Python Server
+ ↓
+target_service.py
+ ↓
+Targets + locations
+ ↓
+JSON Response
+ ↓
+Formatted Client Output
+
+
+
+Feature 2 — Strike Asset Investigation
+זהו החלק הפתוח.
+בחלק זה מצטרף מידע חדש (שאתם צריכים להגדיר עבורו טבלאות) - אמצעי תקיפה, ותקיפה.
+אמצעי תקיפה (strike asset) = כלי נשק עם תיאור, חימוש, וכמות דלק מסוימת.
+תקיפה (strike) = אמצעי תקיפה + מטרה + מיקום.
+
+עליכם לתכנן ולממש Feature Full Stack שעונה על השאלה:
+בהינתן אמצעי תקיפה מסוים, כמה מטרות נתקפו באמצעותו בכל מיקום?
+ניתן לחפש את האמצעי לפי id או name.
+
+פ'יצ'ר זה הוא מאובטח - כלומר משתמש צריך שם משתמש וסיסמה תקינים כדי לבצע את השאילתה הזו.
+נדרש להוסיף ENDLPOINT לרשום משתמש חדש ולשמור אותו עם הסיסמה שלו בצורה מגובבת (hashed) בתוך קובץ CSV.
+המשתמש נדרש לספק את שם המשתמש והסיסמה שלו כחלק מבקשת השאילתא מהלקוח.
+
+
+המידע שצריך להישמר
+לכל Strike Asset יש לפחות:
+id
+name
+armament
+max_fuel
+
+
+
+לכל Strike יש לפחות:
+date
+target
+strike_asset
+location
+result  # missed | injured | dead
+
+ניתן להניח שכל מטרה נתקפת על ידי אותו אמצעי באותו מיקום - פעם אחת בלבד
+חשבו על הטבלאות שעליכם לייצר על מנת שהישויות יהיו בעלות התכונות המתוארות, ובנוסף - שיהיה אפשר לבצע את השאילתה.
+
+
+Client — Feature 2
+• הוסיפו אפשרויות רלוונטיות לתפריט על מנת לבצע את השאילתה.
+• אפשרו יצירת משתמש חדש באמצעות username ו־password.
+• אפשרו חיפוש Strike Asset לפי id או name.
+• קבלו username ו־password לפני ביצוע התחקור המאובטח - ולידציה שאינם ריקים.
+• שלחו Request לשרת והציגו את התוצאה בצורה קריאה, לא בהדפסה ישירה של JSON.
+אתם מחליטים אילו פונקציות, קבצים ותיקיות להוסיף, תוך שמירה על Clean Code, SRP ו־DRY.
+
+Server — Feature 2
+• צרו Endpoint ליצירת משתמש חדש.
+• שמרו משתמשים בקובץ users.csv במבנה username,password_hash.
+• הסיסמה חייבת להישמר כ־hash, לדוגמה באמצעות bcrypt.
+• צרו Endpoint מאובטח לתחקור Strike Asset.
+• ה־Endpoint מקבל strike asset id או name יחד עם username ו־password.
+• אם האימות נכשל — אין להריץ את התחקור ואין להחזיר מידע מה־Database.
+• אם האימות הצליח — תחקרו את ה־Database והחזירו לכל location את מספר המטרות הייחודיות שנתקפו באמצעות האמצעי.
+יש להחזיר location name ולא location_id.
+
+Database Design — Feature 2
+תכננו את הטבלאות הדרושות כדי לבצע את השאילתה
+צרו sql/design.txt ובו:
+• שמות הטבלאות החדשות.
+• השדות וסוגי הנתונים.
+• Primary Keys.
+• Foreign Keys והטבלאות שאליהן הם מצביעים.
+• הסבר קצר למה המבנה שבחרתם מאפשר לענות על שאלת התחקור.
+
+
+
+
+
+
+
+
+
+Flow — Feature 2
+User
+ ↓
+Strike Asset ID / name + username + password
+ ↓
+Python Client
+ ↓ HTTP
+Authenticated Server Endpoint
+ ↓
+users.csv authentication
+ ↓
+Database query
+ ↓
+Strike Assets + Strikes + Targets + Locations
+ ↓
+Group by location / count unique targets
+ ↓
+JSON Response
+ ↓
+Formatted Client Output
+
+בסיום הבחינה
+• Feature 1: חיפוש Target לפי id או name והצגת last known location.
+• Feature 2: חיפוש Strike Asset לפי id או name, Authentication, והצגת מספר מטרות ייחודיות שנתקפו בכל location.
+• Client ו־Server צריכים להיות תואמים ב־Endpoint, HTTP Method ומבנה Request/Response.
+• המערכת תיבדק כיחידה אחת: Client → Server → Database → Server → Client.
+
+הגשה
+1.	יש לייצר קובץ ZIP שיכיל את כל קבצי הCLIENT SEVER SQL.
+2.	שם הקובץ הוא בפורמט:
+a.	firstName_lastName_id.zip
+b.	לדוגמה:
+c.	Mosh_cohen_123123123.zip
+3.	יש להגיש את הZIP במודל.
