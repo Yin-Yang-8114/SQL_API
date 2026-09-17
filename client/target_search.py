@@ -15,7 +15,7 @@ def read_target_id():
                 valid = False
         except ValueError:
             print("Enter a whole number")
-    return value
+    return number
 
 def read_target_name():
     valid = True
@@ -25,4 +25,4 @@ def read_target_name():
             print( "This field cannot be empty")
         else:
             valid = False
-    return value
+    return value.strip()

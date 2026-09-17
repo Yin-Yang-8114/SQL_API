@@ -3,7 +3,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 from peewee import MySQLDatabase
 
-
 env_path = Path(__file__).resolve().parent / ".env"
 load_dotenv(env_path)
 

@@ -1,16 +1,15 @@
-def show_result(result):
-    print("")
-    print(f"Device ID: {result['device_id']}")
-    print(f"Device name: {result['device_name']}")
-    print(f"Station: {result['station_name']}")
-    print(f"City: {result['city']}")
-    print(f"Total units: {result['total_units']}")
-    print(f"Operational units: {result['operational_units']}")
-    print(f"Readiness: {result['readiness_percent']}%")
 
+""""
+Target ID: <target_id> 
+Target name: <target_name> 
+Last known location: <location_name> 
+Country: <country> 
+Description: <description>
+"""
 
-def show_error(message):
-    print(f"Error: {message}")
-
-def show_message(message):
-    print(message)
+def show_last_location(result: dict):
+    print(f"Target ID: {result['target_id']}")
+    print(f"Target name: {result['target_name']}")
+    print(f"Last known location: {result['location_name']}")
+    print(f"Country: {result['country']}")
+    print(f"Description: {result['description']}")
