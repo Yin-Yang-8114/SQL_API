@@ -49,7 +49,29 @@ def request_last_location(endpoint, params=None):
     response.raise_for_status()
     return response.json()
 main:
-ריק אני צריך שתעשה אותו
+import requests
+from target_search import choose_search_type, read_target_name,read_target_id
+from http_client import request_last_location
+from output import show_last_location
+
+def main():
+    while True:
+        try:
+            action = choose_search_type()
+            if action == "id":
+                target_id = read_target_id()
+            if action == "name":
+                target_name = read_target_name()
+        except requests.exceptions.HTTPError as error:
+            try:
+                message = error.response.json().get("detail", str(error))
+            except ValueError:
+                message = str(error)
+        except (KeyboardInterrupt, EOFError):
+            break
+
+if __name__ == "__main__":
+    main()
 
 
 output:
